@@ -1,18 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
     const collegeYes = document.getElementById("college-yes");
     const collegeNo = document.getElementById("college-no");
-    const studentStatusContainer = document.getElementById("student-status-container");
+    const studentStatusDropdown = document.getElementById("student-status-dropdown");
 
     // Toggle the student dropdown visibility based on selection
     collegeYes.addEventListener("change", () => {
         if (collegeYes.checked) {
-            studentStatusContainer.style.display = "block";
+            studentStatusDropdown.style.display = "block";
         }
     });
 
     collegeNo.addEventListener("change", () => {
         if (collegeNo.checked) {
-            studentStatusContainer.style.display = "none";
+            studentStatusDropdown.style.display = "none";
         }
     });
 });
