@@ -1,56 +1,65 @@
+
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
 const bodyParser = require('body-parser');
+const xlsx = require('xlsx');
+const fs = require('fs');
 
-// Initialize Express
 const app = express();
-
-// Middleware
-app.use(cors());
 app.use(bodyParser.json());
 
-// Connect to MongoDB (replace with your MongoDB URI)
-// const uri = 'mongodb://localhost:27017/churchdb';
-const uri = 'mongodb+srv://simangolwalifwatila99:<2e0QrcJveY61SqkA>@cluster0.fqsyu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Could not connect to MongoDB...', err));
+const cors = require('cors');
+app.use(cors());
 
-// Import the Visitor model
-const Visitor = require('./models/Visitor');
 
-// POST route for form submission
-app.post('/submit-form', async (req, res) => {
-    try {
-        // Create a new visitor from the form data
-        const newVisitor = new Visitor({
-            name: req.body.name,
-            email: req.body.email,
-            phone: req.body.phone,
-            address: req.body.address,
-            collegeStudent: req.body.collegeStudent,
-            studentStatus: req.body.studentStatus,
-            howHeard: req.body.howHeard,
-            membership: req.body.membership,
-            prayer: req.body.prayer,
-            pastorVisit: req.body.pastorVisit === 'yes',
-            moreInfo: req.body.moreInfo === 'yes'
-        });
+// Define the route to handle form submissions
+app.post('/submit-form', (req, res) => {
+    const formData = req.body;
 
-        // Save the visitor to the database
-        await newVisitor.save();
-
-        // Send a success response
-        res.status(200).json({ message: 'Form submitted successfully!' });
-    } catch (error) {
-        console.error('Error saving form data:', error);
-        res.status(500).json({ message: 'An error occurred while submitting the form.' });
+    // Check if the Excel file exists, or create a new one
+    let workbook;
+    if (fs.existsSync('visitor_data.xlsx')) {
+        workbook = xlsx.readFile('visitor_data.xlsx');
+    } else {
+        workbook = xlsx.utils.book_new();
     }
+
+    // Check if the worksheet exists, or create a new one
+    let worksheet = workbook.Sheets['Visitors'];
+    if (!worksheet) {
+        worksheet = xlsx.utils.aoa_to_sheet([['Name', 'Email', 'Phone', 'Address', 'College Student', 'Student Status', 'How Heard', 'Membership', 'Prayer', 'Pastor Visit', 'More Info']]);
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Visitors');
+    }
+
+    // Append the new form data to the worksheet
+    const newRow = [
+        formData.name,
+        formData.email,
+        formData.phone,
+        formData.address,
+        formData.collegeStudent,
+        formData.studentStatus,
+        formData.howHeard,
+        formData.membership,
+        formData.prayer,
+        formData.pastorVisit,
+        formData.moreInfo
+    ];
+
+    const sheetData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+    sheetData.push(newRow);
+
+    const newWorksheet = xlsx.utils.aoa_to_sheet(sheetData);
+    workbook.Sheets['Visitors'] = newWorksheet;
+
+    // Save the Excel file
+    xlsx.writeFile(workbook, 'visitor_data.xlsx');
+
+    res.json({ message: 'Form submitted successfully and saved to Excel!' });
 });
 
+
+
 // Start the server
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(3000, () => {
+    console.log('Server running on http://localhost:3000');
 });
