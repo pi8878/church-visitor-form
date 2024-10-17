@@ -54,7 +54,7 @@ app.post('/submit-form', (req, res) => {
     // Save the Excel file
     xlsx.writeFile(workbook, 'visitor_data.xlsx');
 
-    res.json({ message: 'Form submitted successfully and saved to Excel!' });
+    res.json({ message: 'Form submitted successfully!' });
 });
 
 
